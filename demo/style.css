@@ -1,0 +1,16 @@
+/** stuff **/
+div#cursor {
+  display: none;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 5px;
+  height: 5px;
+  background-color: red;
+  z-index: 999;
+  border-radius: 50%;
+}
+
+div#cursor.active {
+  display: block;
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <title>CursorSpy Test</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<button onclick="Test.spy.record();">Record</button>
+<button onclick="Test.spy.stop();">Stop</button>
+<button onclick="Test.spy.play();">Play</button>
+<script type="text/javascript" src="../CursorSpy.js"></script>
+<script type="text/javascript">
+var Test = {
+  init: function () {
+    this.spy = new CursorSpy();
+    this.spy.init();
+  }
+}
+
+window.onload = function () {
+  Test.init();
+}
+</script>
+</body>
+</html>
