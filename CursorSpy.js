@@ -3,12 +3,32 @@ CursorSpy = function () {
   this._recording = false;
   this._packets = [];
   this._intervalSecs = false;
+  this.localStore = true;
 
   this.useInterval = function (amt) {
     if(amt <= 0) {
       this._intervalSecs = false;
     } else {
       this._intervalSecs = amt;
+    }
+  }
+
+  this.disableLocalStore = function () {
+    this.localStore = false;
+    return this;
+  }
+  this.enableLocalStore = function () {
+    this.localStore = true;
+    return this;
+  }
+
+  this.on = function (ev, fn) {
+    switch(ev) {
+      case "data":
+        this['_fn_'+ev] = fn;
+        return this;
+      default:
+        throw new Error("Event '"+ev+"' not recognized.");
     }
   }
 
@@ -24,7 +44,7 @@ CursorSpy = function () {
       if(self._intervalSecs) {
         self.tmpPacket = packet;
       } else {
-        self._packets.push(packet);
+        self.ondata(packet);
       }
     };
 
@@ -34,7 +54,7 @@ CursorSpy = function () {
       packet.x = e.pageX;
       packet.y = e.pageY;
       packet.diff = new Date().getTime() - self.startTime;
-      self._packets.push(packet);
+      self.ondata(packet);
     }
 
     this.cursor = document.createElement('div');
@@ -47,6 +67,16 @@ CursorSpy = function () {
     this.cursor.style.backgroundColor = 'red';
     document.body.appendChild(this.cursor);
   };
+  this.init();
+
+  this.ondata = function (d) {
+    if(this.localStore) {
+      this._packets.push(d);
+    }
+    if(typeof this._fn_data == 'function') {
+      this._fn_data(d);
+    }
+  }
 
   this.record = function () {
     this.stop();
@@ -63,7 +93,7 @@ CursorSpy = function () {
          console.log("ignoring this one");
          return;
        }
-       self._packets.push(self.tmpPacket);
+       self.ondata(self.tmpPacket);
       }, 100);
     }
 
@@ -114,7 +144,6 @@ CursorSpy = function () {
             self.cursor.style.top = pack.y+"px";
             self.cursor.style.left = pack.x+"px";
           }
-          console.log(ind);
         }
       })(p, i);
       this._playTimers.push(setTimeout(fn, p.diff - this._lastBurst));
