@@ -25,6 +25,7 @@ CursorSpy = function () {
   this.on = function (ev, fn) {
     switch(ev) {
       case "data":
+      case "endPlay":
         this['_fn_'+ev] = fn;
         return this;
       default:
@@ -48,12 +49,19 @@ CursorSpy = function () {
       }
     };
 
-    this._click = function (e) {
-      var packet = {};
-      packet.type="click";
-      packet.x = e.pageX;
-      packet.y = e.pageY;
-      packet.diff = new Date().getTime() - self.startTime;
+    this._mousedown = function (e) {
+      var packet = {
+        type: 'mousedown',
+        diff: new Date().getTime() - self.startTime
+      }
+      self.ondata(packet);
+    }
+
+    this._mouseup = function (e) {
+      var packet = {
+        type: 'mouseup',
+        diff: new Date().getTime() - self.startTime
+      }
       self.ondata(packet);
     }
 
@@ -90,21 +98,24 @@ CursorSpy = function () {
       this.recordInterval = setInterval(function () {
        if(!self.tmpPacket) return;
        if(self._packets.length > 0 && self._packets[self._packets.length-1] == self.tmpPacket) {
-         console.log("ignoring this one");
          return;
        }
        self.ondata(self.tmpPacket);
-      }, 100);
+      }, this._intervalSecs);
     }
 
     window.addEventListener('mousemove', this._mousemove);
-    window.addEventListener('click', this._click);
+    // window.addEventListener('click', this._click);
+    window.addEventListener('mousedown', this._mousedown);
+    window.addEventListener('mouseup', this._mouseup);
   };
 
   this.stop = function () {
     //stop an active recording session
     window.removeEventListener('mousemove', this._mousemove);
-    window.removeEventListener('click',this._click);
+    // window.removeEventListener('click',this._click);
+    window.removeEventListener('mousedown', this._mousedown);
+    window.removeEventListener('mouseup', this._mouseup);
 
     this._recording = false;
     this.tmpPacket = false;
@@ -140,10 +151,20 @@ CursorSpy = function () {
 
       var fn = (function (pack, ind) {
         return function () {
-          if(pack.type == 'mousemove') {
-            self.cursor.style.top = pack.y+"px";
-            self.cursor.style.left = pack.x+"px";
+          switch(pack.type) {
+            case 'mousemove':
+              self.cursor.style.top = pack.y+"px";
+              self.cursor.style.left = pack.x+"px";
+              break;
+            case 'mousedown':
+              self.cursor.style.backgroundColor = 'black';
+              break;
+            case 'mouseup':
+              self.cursor.style.backgroundColor = 'red';
+              break;
           }
+
+          if(ind == self._packets.length-1) self._fn_endPlay();
         }
       })(p, i);
       this._playTimers.push(setTimeout(fn, p.diff - this._lastBurst));
@@ -161,3 +182,5 @@ CursorSpy = function () {
     }
   }
 }
+
+CursorSpy.prototype._fn_endPlay = function () {}
