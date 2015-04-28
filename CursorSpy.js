@@ -65,12 +65,22 @@ CursorSpy = function () {
       self.ondata(packet);
     }
 
+    this._scroll = function (e) {
+      var packet = {
+        type: 'scroll',
+        diff: new Date().getTime() - self.startTime,
+        x: window.pageXOffset || document.documentElement.scrollLeft,
+        y: window.pageYOffset || document.documentElement.scrollTop
+      };
+      self.ondata(packet);
+    }
+
     this.cursor = document.createElement('div');
     this.cursor.style.width = "8px";
     this.cursor.style.height = "8px";
     this.cursor.style.borderRadius = "50%";
     this.cursor.style.display = 'none';
-    this.cursor.style.position = 'fixed';
+    this.cursor.style.position = 'absolute';
     this.cursor.style.zIndex = 999;
     this.cursor.style.backgroundColor = 'red';
     document.body.appendChild(this.cursor);
@@ -108,6 +118,7 @@ CursorSpy = function () {
     // window.addEventListener('click', this._click);
     window.addEventListener('mousedown', this._mousedown);
     window.addEventListener('mouseup', this._mouseup);
+    window.addEventListener('scroll', this._scroll);
   };
 
   this.stop = function () {
@@ -116,6 +127,7 @@ CursorSpy = function () {
     // window.removeEventListener('click',this._click);
     window.removeEventListener('mousedown', this._mousedown);
     window.removeEventListener('mouseup', this._mouseup);
+    window.removeEventListener('scroll', this._scroll);
 
     this._recording = false;
     this.tmpPacket = false;
@@ -161,6 +173,9 @@ CursorSpy = function () {
               break;
             case 'mouseup':
               self.cursor.style.backgroundColor = 'red';
+              break;
+            case "scroll":
+              window.scrollTo(pack.x, pack.y);
               break;
           }
 
